@@ -1,0 +1,17 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<configuration scan="true" scanPeriod="10 seconds">
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%d{yyyy-MM-dd'T'HH:mm:ss.sss'Z'}] [%C] [%t] [%L] [%X{provider}] [%-5p] %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="Loki" class="com.lotfy.logback.loki.LokiAppender">
+        <lokiUrl>http://34.71.152.102:3100</lokiUrl>
+        <label>develop</label>
+    </appender>
+
+    <root level="debug">
+        <appender-ref ref="Loki"/>
+    </root>
+</configuration>
