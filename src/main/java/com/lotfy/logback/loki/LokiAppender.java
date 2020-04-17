@@ -109,13 +109,13 @@ public class LokiAppender extends AppenderBase<ILoggingEvent> {
         String time = format.format(new Date(System.currentTimeMillis()));
 
         return new StringBuilder().append(time)
-                .append("  ")
+                .append(" ")
                 .append(level.toUpperCase())
-                .append("  ")
+                .append(" ")
                 .append(loggerName)
-                .append("  ")
+                .append(" ")
                 .append("[" + threadName + "]")
-                .append("  ")
+                .append(" ")
                 .append(message).toString();
     }
 
