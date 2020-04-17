@@ -73,10 +73,10 @@ public class LokiAppender extends AppenderBase<ILoggingEvent> {
         String[] v1 = null;
         if (!level.equalsIgnoreCase("error")) {
             v1 = new String[]{String.valueOf(System.currentTimeMillis() * 1000000),
-                    formatFirstLine(level.toUpperCase(), loggerName, threadName, message)};
+                    formatFirstLine(level.toUpperCase(), loggerName, threadName, formatMsg(message))};
         } else {
             v1 = new String[]{String.valueOf(System.currentTimeMillis() * 1000000),
-                    formatFirstLine(level.toUpperCase(), loggerName, threadName, message) + formatStackTrace(throwableProxy)};
+                    formatFirstLine(level.toUpperCase(), loggerName, threadName, formatMsg(message)) + formatStackTrace(throwableProxy)};
         }
 
         List<String[]> values = new ArrayList<>();
@@ -91,6 +91,18 @@ public class LokiAppender extends AppenderBase<ILoggingEvent> {
 
     }
 
+    public String formatMsg(String msg) {
+        String[] stack = msg.split(" ");
+        StringBuilder ret = new StringBuilder();
+        for (int i = 0; i < stack.length; i++) {
+            if (stack[i].equals("at")) {
+                ret.append("\n\t\t").append(stack[i]);
+            } else {
+                ret.append(" ").append(stack[i]);
+            }
+        }
+        return ret.toString();
+    }
 
     private String formatFirstLine(String level, String loggerName, String threadName, String message) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
