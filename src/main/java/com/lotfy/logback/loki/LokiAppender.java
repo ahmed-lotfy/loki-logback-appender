@@ -73,10 +73,10 @@ public class LokiAppender extends AppenderBase<ILoggingEvent> {
         String[] v1 = null;
         if (!level.equalsIgnoreCase("error")) {
             v1 = new String[]{String.valueOf(System.currentTimeMillis() * 1000000),
-                    formatFirstLine(level.toUpperCase(), loggerName, threadName, formatMsg(message))};
+                    formatFirstLine(level.toUpperCase(), loggerName, threadName, message)};
         } else {
             v1 = new String[]{String.valueOf(System.currentTimeMillis() * 1000000),
-                    formatFirstLine(level.toUpperCase(), loggerName, threadName, formatMsg(message)) + formatStackTrace(throwableProxy)};
+                    formatFirstLine(level.toUpperCase(), loggerName, threadName, message) + formatStackTrace(throwableProxy)};
         }
 
         List<String[]> values = new ArrayList<>();
@@ -109,13 +109,13 @@ public class LokiAppender extends AppenderBase<ILoggingEvent> {
         String time = format.format(new Date(System.currentTimeMillis()));
 
         return new StringBuilder().append(time)
-                .append("\t")
+                .append("  ")
                 .append(level.toUpperCase())
-                .append("\t")
+                .append("  ")
                 .append(loggerName)
-                .append("\t")
+                .append("  ")
                 .append("[" + threadName + "]")
-                .append("\t")
+                .append("  ")
                 .append(message).toString();
     }
 
