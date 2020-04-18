@@ -36,6 +36,6 @@ Configuration Reference
 =======================
 
  * `lokiUrl` (required): The URL to your Loki push API endpoint
- * `label` (required): name of your application to add this label in Loki as app={labelValue}
+ * `label` (required): name of your application to add this label in Loki as `app={labelValue}`
  * `enabled` (required): if you have multiple environments you may need to disable appender for some of them.
  
