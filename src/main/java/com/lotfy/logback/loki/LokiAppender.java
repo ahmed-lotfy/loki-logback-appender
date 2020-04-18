@@ -4,6 +4,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.core.AppenderBase;
+import ch.qos.logback.core.AsyncAppenderBase;
+import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lotfy.logback.loki.conf.Settings;
@@ -17,7 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class LokiAppender extends AppenderBase<ILoggingEvent> {
+public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
     private String lokiUrl;
     private String label;
