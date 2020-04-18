@@ -10,42 +10,91 @@ import com.lotfy.logback.loki.conf.Settings;
 import com.lotfy.logback.loki.model.LokiStream;
 import com.lotfy.logback.loki.model.LokiStreamWrapper;
 import com.lotfy.logback.loki.util.RestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
+    private static final Logger logger = LoggerFactory.getLogger(LokiAppender.class);
+
     private String lokiUrl;
     private String label;
-    private Map<String, ILoggingEvent> map = new ConcurrentHashMap();
+    private boolean enabled;
 
 
     @Override
     protected void append(ILoggingEvent iLoggingEvent) {
-        LokiStreamWrapper streamWrapper = null;
-        if (iLoggingEvent.getLevel() == Level.ERROR) {
-            streamWrapper = buildLogPush(iLoggingEvent.getLevel().toString(), iLoggingEvent.getLoggerName(), iLoggingEvent.getThreadName(), iLoggingEvent.getMessage(), iLoggingEvent.getThrowableProxy());
+        if (enabled) {
+            LokiStreamWrapper streamWrapper;
+            if (iLoggingEvent.getLevel() == Level.ERROR) {
+                streamWrapper = buildLogPush(iLoggingEvent.getLevel().toString(), iLoggingEvent.getLoggerName(), iLoggingEvent.getThreadName(), iLoggingEvent.getMessage(), iLoggingEvent.getThrowableProxy());
+            } else {
+                streamWrapper = buildLogPush(iLoggingEvent.getLevel().toString(), iLoggingEvent.getLoggerName(), iLoggingEvent.getThreadName(), iLoggingEvent.getMessage(), null);
+            }
+
+            StringBuilder url = new StringBuilder();
+            url.append(lokiUrl).append(Settings.getLokiUrl());
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
+            try {
+                RestUtils.post(url.toString(), headers, new ObjectMapper().writeValueAsString(streamWrapper));
+            } catch (JsonProcessingException e) {
+                logger.error(e.getMessage());
+            }
+        }
+    }
+
+    private LokiStreamWrapper buildLogPush(String level, String loggerName, String threadName, String message, IThrowableProxy throwableProxy) {
+        LokiStreamWrapper streamWrapper = new LokiStreamWrapper();
+        List<LokiStream> streams = new ArrayList<>();
+        LokiStream stream = new LokiStream();
+        LokiStream.Stream stream1 = new LokiStream.Stream();
+        stream1.setApp(getLabel());
+        stream.setStream(stream1);
+        String[] v1;
+        if (!level.equalsIgnoreCase("error")) {
+            v1 = new String[]{String.valueOf(System.currentTimeMillis() * 1000000),
+                    formatFirstLine(level.toUpperCase(), loggerName, threadName, message)};
         } else {
-            streamWrapper = buildLogPush(iLoggingEvent.getLevel().toString(), iLoggingEvent.getLoggerName(), iLoggingEvent.getThreadName(), iLoggingEvent.getMessage(), null);
+            v1 = new String[]{String.valueOf(System.currentTimeMillis() * 1000000),
+                    formatFirstLine(level.toUpperCase(), loggerName, threadName, message) + formatStackTrace(throwableProxy)};
         }
+        List<String[]> values = new ArrayList<>();
+        values.add(v1);
+        stream.setValues(values);
+        streams.add(stream);
+        streamWrapper.setStreams(streams);
+        return streamWrapper;
 
-        StringBuilder url = new StringBuilder();
-        url.append(lokiUrl).append(Settings.getLokiUrl());
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
-        try {
-            ResponseEntity response = RestUtils.post(url.toString(), headers, new ObjectMapper().writeValueAsString(streamWrapper));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
+    }
+
+    private String formatFirstLine(String level, String loggerName, String threadName, String message) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        String time = format.format(new Date(System.currentTimeMillis()));
+
+        return time +
+                " " +
+                level.toUpperCase() +
+                " " +
+                loggerName +
+                " " +
+                "[" + threadName + "]" +
+                " " +
+                message;
+    }
+
+    private String formatStackTrace(IThrowableProxy iThrowableProxy) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < iThrowableProxy.getStackTraceElementProxyArray().length; i++) {
+            builder.append("\n\t\t").append(iThrowableProxy.getStackTraceElementProxyArray()[i].toString());
         }
-
+        return builder.toString();
     }
 
     public String getLokiUrl() {
@@ -64,69 +113,11 @@ public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
         this.label = label;
     }
 
-    private LokiStreamWrapper buildLogPush(String level, String loggerName, String threadName, String message, IThrowableProxy throwableProxy) {
-        LokiStreamWrapper streamWrapper = new LokiStreamWrapper();
-        List<LokiStream> streams = new ArrayList<>();
-        LokiStream stream = new LokiStream();
-        LokiStream.Stream stream1 = new LokiStream.Stream();
-        stream1.setApp(getLabel());
-        List<Map<String, String>> map = new ArrayList<>();
-
-        stream.setStream(stream1);
-        String[] v1 = null;
-        if (!level.equalsIgnoreCase("error")) {
-            v1 = new String[]{String.valueOf(System.currentTimeMillis() * 1000000),
-                    formatFirstLine(level.toUpperCase(), loggerName, threadName, message)};
-        } else {
-            v1 = new String[]{String.valueOf(System.currentTimeMillis() * 1000000),
-                    formatFirstLine(level.toUpperCase(), loggerName, threadName, message) + formatStackTrace(throwableProxy)};
-        }
-
-        List<String[]> values = new ArrayList<>();
-        values.add(v1);
-
-        stream.setValues(values);
-
-        streams.add(stream);
-
-        streamWrapper.setStreams(streams);
-        return streamWrapper;
-
+    public boolean isEnabled() {
+        return enabled;
     }
 
-    public String formatMsg(String msg) {
-        String[] stack = msg.split(" ");
-        StringBuilder ret = new StringBuilder();
-        for (int i = 0; i < stack.length; i++) {
-            if (stack[i].equals("at")) {
-                ret.append("\n\t\t").append(stack[i]);
-            } else {
-                ret.append(" ").append(stack[i]);
-            }
-        }
-        return ret.toString();
-    }
-
-    private String formatFirstLine(String level, String loggerName, String threadName, String message) {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        String time = format.format(new Date(System.currentTimeMillis()));
-
-        return new StringBuilder().append(time)
-                .append(" ")
-                .append(level.toUpperCase())
-                .append(" ")
-                .append(loggerName)
-                .append(" ")
-                .append("[" + threadName + "]")
-                .append(" ")
-                .append(message).toString();
-    }
-
-    private String formatStackTrace(IThrowableProxy iThrowableProxy) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < iThrowableProxy.getStackTraceElementProxyArray().length; i++) {
-            builder.append("\n\t\t").append(iThrowableProxy.getStackTraceElementProxyArray()[i].toString());
-        }
-        return builder.toString();
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }

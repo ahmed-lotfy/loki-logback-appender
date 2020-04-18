@@ -9,6 +9,7 @@
     <appender name="Loki" class="com.lotfy.logback.loki.LokiAppender">
         <lokiUrl>http://34.71.152.102:3100</lokiUrl>
         <label>develop</label>
+        <enabled>true</enabled>
     </appender>
 
     <root level="debug">
