@@ -15,4 +15,9 @@ public class LokiAppenderTest {
         logger.error("an error occurred", new RuntimeException("error occurred"));
         logger.debug("some debug message");
     }
+
+    @Test
+    public void testRussianChar() {
+        logger.info("Статья 1 Все люди рождаются свободными и равными в своем достоинстве и правах. Они наделены разумом и совестью и должны поступать в отношении друг друга в духе братства");
+    }
 }

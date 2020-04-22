@@ -1,9 +1,10 @@
 package com.lotfy.logback.loki.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LokiStreamWrapper {
+public class LokiStreamWrapper implements Serializable {
     private List<LokiStream> streams = new ArrayList<>();
 
     public List<LokiStream> getStreams() {

@@ -42,6 +42,7 @@ public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
             url.append(lokiUrl).append(Settings.getLokiUrl());
             HttpHeaders headers = new HttpHeaders();
             headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
+            headers.add(HttpHeaders.ACCEPT_CHARSET, "utf-8");
             try {
                 RestUtils.post(url.toString(), headers, new ObjectMapper().writeValueAsString(streamWrapper));
             } catch (JsonProcessingException e) {
