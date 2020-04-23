@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lotfy.logback.loki.conf.Settings;
 import com.lotfy.logback.loki.model.Label;
+import com.lotfy.logback.loki.model.LokiLabels;
 import com.lotfy.logback.loki.model.LokiStream;
 import com.lotfy.logback.loki.model.LokiStreamWrapper;
 import com.lotfy.logback.loki.util.RestUtils;
@@ -25,7 +26,7 @@ public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
     private static final Logger logger = LoggerFactory.getLogger(LokiAppender.class);
 
     private String lokiUrl;
-    private List<Label> labels = new ArrayList<>();
+    private LokiLabels labels;
     private boolean enabled;
 
 
@@ -55,7 +56,7 @@ public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
     private LokiStreamWrapper buildLogPush(String level, String loggerName, String threadName, String message, IThrowableProxy throwableProxy) {
         LokiStreamWrapper streamWrapper = new LokiStreamWrapper();
         LokiStream stream = new LokiStream();
-        for (Label label : labels) {
+        for (Label label : labels.getLabels()) {
             stream.getStream().put(label.getKey(), label.getValue());
         }
         String[] v1;
@@ -103,16 +104,25 @@ public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
         this.lokiUrl = lokiUrl;
     }
 
-    public List<Label> getLabels() {
+//    public List<Label> getLabels() {
+//        return labels;
+//    }
+//
+//    public void setLabels(List<Label> labels) {
+//        this.labels = labels;
+//    }
+//
+//    public void addLabel(Label label) {
+//        labels.add(label);
+//    }
+
+
+    public LokiLabels getLabels() {
         return labels;
     }
 
-    public void setLabels(List<Label> labels) {
+    public void setLabels(LokiLabels labels) {
         this.labels = labels;
-    }
-
-    public void addLabel(Label label) {
-        labels.add(label);
     }
 
     public void setEnabled(boolean enabled) {
