@@ -12,7 +12,7 @@ In your `pom.xml` (or equivalent), add:
      <dependency>
         <groupId>com.lotfy</groupId>
         <artifactId>loki-logback-appender</artifactId>
-        <version>1.0</version>
+        <version>1.1.0</version>
      </dependency>
      
      <repositories>
@@ -27,7 +27,20 @@ In your `logback.xml`:
 
         <appender name="Loki" class="com.lotfy.logback.loki.LokiAppender">
               <lokiUrl>http://loki:3100</lokiUrl>
-              <label>my-application</label> <!-- this will result in {app="my-application"} label in Loki-->
+              <labels>
+                  <label>
+                     <key>key1</key>
+                     <value>develop1</value>
+                  </label>
+                  <label>
+                     <key>key2</key>
+                     <value>develop2</value>
+                  </label>
+                  <label>
+                     <key>key3</key>
+                     <value>develop3</value>
+                  </label>
+              </labels>
               <enabled>true</enabled>
         </appender>
 
@@ -36,6 +49,6 @@ Configuration Reference
 =======================
 
  * `lokiUrl` (required): The URL to your Loki push API endpoint
- * `label` (required): name of your application to add this label in Loki as `app={labelValue}`
+ * `labels` (required): List of labels to be added to Loki queries 
  * `enabled` (required): if you have multiple environments you may need to disable appender for some of them.
  
