@@ -12,7 +12,7 @@ In your `pom.xml` (or equivalent), add:
      <dependency>
         <groupId>com.lotfy</groupId>
         <artifactId>loki-logback-appender</artifactId>
-        <version>1.1.0</version>
+        <version>1.0</version>
      </dependency>
      
      <repositories>
