@@ -14,4 +14,9 @@ public class LokiStreamWrapper implements Serializable {
     public void setStreams(List<LokiStream> streams) {
         this.streams = streams;
     }
+
+    public void addStream(LokiStream stream) {
+        this.streams.add(stream);
+    }
+
 }
