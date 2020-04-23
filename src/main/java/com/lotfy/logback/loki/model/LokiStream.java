@@ -1,19 +1,20 @@
 package com.lotfy.logback.loki.model;
 
-import com.google.common.base.MoreObjects;
-
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class LokiStream implements Serializable {
-    private Stream stream;
-    private List<String[]> values;
+    private Map<String, String> stream = new HashMap<>();
+    private List<String[]> values = new ArrayList<>();
 
-    public Stream getStream() {
+    public Map<String, String> getStream() {
         return stream;
     }
 
-    public void setStream(Stream stream) {
+    public void setStream(Map<String, String> stream) {
         this.stream = stream;
     }
 
@@ -25,22 +26,5 @@ public class LokiStream implements Serializable {
         this.values = values;
     }
 
-    public static class Stream implements Serializable {
-        private String app;
 
-        public String getApp() {
-            return app;
-        }
-
-        public void setApp(String app) {
-            this.app = app;
-        }
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                    .add("app", app)
-                    .toString();
-        }
-    }
 }
