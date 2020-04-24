@@ -17,9 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
@@ -103,19 +101,6 @@ public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
     public void setLokiUrl(String lokiUrl) {
         this.lokiUrl = lokiUrl;
     }
-
-//    public List<Label> getLabels() {
-//        return labels;
-//    }
-//
-//    public void setLabels(List<Label> labels) {
-//        this.labels = labels;
-//    }
-//
-//    public void addLabel(Label label) {
-//        labels.add(label);
-//    }
-
 
     public LokiLabels getLabels() {
         return labels;
