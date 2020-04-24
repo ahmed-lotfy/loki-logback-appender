@@ -20,4 +20,9 @@ public class LokiAppenderTest {
     public void testRussianChar() {
         logger.info("Статья 1 Все люди рождаются свободными и равными в своем достоинстве и правах. Они наделены разумом и совестью и должны поступать в отношении друг друга в духе братства");
     }
+
+    @Test
+    public void testStringSubstitution() {
+        logger.info("some message with param: {} param2: {} param3: {}", 5, "some value", 12.5);
+    }
 }

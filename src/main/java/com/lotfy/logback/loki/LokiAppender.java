@@ -35,9 +35,9 @@ public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
         if (enabled) {
             LokiStreamWrapper streamWrapper;
             if (iLoggingEvent.getLevel() == Level.ERROR) {
-                streamWrapper = buildLogPush(iLoggingEvent.getLevel().toString(), iLoggingEvent.getLoggerName(), iLoggingEvent.getThreadName(), iLoggingEvent.getMessage(), iLoggingEvent.getThrowableProxy());
+                streamWrapper = buildLogPush(iLoggingEvent.getLevel().toString(), iLoggingEvent.getLoggerName(), iLoggingEvent.getThreadName(), iLoggingEvent.getFormattedMessage(), iLoggingEvent.getThrowableProxy());
             } else {
-                streamWrapper = buildLogPush(iLoggingEvent.getLevel().toString(), iLoggingEvent.getLoggerName(), iLoggingEvent.getThreadName(), iLoggingEvent.getMessage(), null);
+                streamWrapper = buildLogPush(iLoggingEvent.getLevel().toString(), iLoggingEvent.getLoggerName(), iLoggingEvent.getThreadName(), iLoggingEvent.getFormattedMessage(), null);
             }
 
             StringBuilder url = new StringBuilder();
