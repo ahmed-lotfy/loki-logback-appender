@@ -16,9 +16,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.Date;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
@@ -61,6 +61,8 @@ public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
         }
     }
 
+    private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+
     private LokiStreamWrapper buildLogPush(String level, String loggerName, String threadName, String message, IThrowableProxy throwableProxy) {
         LokiStreamWrapper streamWrapper = new LokiStreamWrapper();
         LokiStream stream = new LokiStream();
@@ -71,7 +73,7 @@ public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
         stream.getStream().put("logger", loggerName);
         stream.getStream().put("thread", threadName);
         Instant now = Instant.now();
-        stream.getValues().add(new String[]{String.valueOf(now.toEpochMilli() * 1000000), formatValue(now.toString(), level, loggerName, threadName, message, throwableProxy)});
+        stream.getValues().add(new String[]{String.valueOf(now.toEpochMilli() * 1000000), formatValue(now.atZone(ZoneId.systemDefault()).format(FORMAT), level, loggerName, threadName, message, throwableProxy)});
         streamWrapper.addStream(stream);
         return streamWrapper;
 
@@ -92,20 +94,6 @@ public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
             for (int i = 0; i < iThrowableProxy.getStackTraceElementProxyArray().length; i++) {
                 builder.append("\n\t\t").append(iThrowableProxy.getStackTraceElementProxyArray()[i].toString());
             }
-        }
-        return builder.toString();
-    }
-
-    private String formatFirstLine(String message) {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        String time = format.format(new Date(System.currentTimeMillis()));
-        return time + " " + message;
-    }
-
-    private String formatStackTrace(IThrowableProxy iThrowableProxy) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < iThrowableProxy.getStackTraceElementProxyArray().length; i++) {
-            builder.append("\n\t\t").append(iThrowableProxy.getStackTraceElementProxyArray()[i].toString());
         }
         return builder.toString();
     }
