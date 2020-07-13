@@ -141,15 +141,25 @@
 
     <distributionManagement>
         <repository>
-            <id>myMavenRepo.write</id>
-            <url>https://mymavenrepo.com/repo/pnxWKEyZOupwUcjSz0MI/</url>
+            <id>dbapp-nexus</id>
+            <url>http://192.168.19.199:8081/repository/maven-releases/</url>
         </repository>
         <snapshotRepository>
-            <id>myMavenRepo.write</id>
-            <url>https://mymavenrepo.com/repo/pnxWKEyZOupwUcjSz0MI/</url>
+            <id>dbapp-nexus-snapshots</id>
+            <url>http://192.168.19.199:8081/repository/maven-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 
-
+    <!-- maven仓库 -->
+    <repositories>
+        <repository>
+            <id>ali</id>
+            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>dbapp</id>
+            <url>http://192.168.19.199:8081/repository/maven-public/</url>
+        </repository>
+    </repositories>
 
 </project>
