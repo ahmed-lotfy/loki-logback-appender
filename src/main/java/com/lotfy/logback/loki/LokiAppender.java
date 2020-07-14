@@ -52,7 +52,6 @@ public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
                 conn.setConnectTimeout(TIMEOUT);
                 objectMapper.writeValue(conn.getOutputStream(), streamWrapper);
                 conn.connect();
-                logger.info(String.valueOf(conn.getResponseCode()), conn.getResponseMessage());
             } catch (JsonProcessingException e) {
                 logger.error(e.getMessage());
             } catch (IOException e) {
