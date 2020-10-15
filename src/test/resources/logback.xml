@@ -7,19 +7,15 @@
     </appender>
 
     <appender name="Loki" class="com.lotfy.logback.loki.LokiAppender">
-        <lokiUrl>http://Loki:3100</lokiUrl>
+        <lokiUrl>http://loki:3100</lokiUrl>
         <labels>
             <label>
-                <key>key1</key>
-                <value>develop1</value>
+                <key>stage</key>
+                <value>debug</value>
             </label>
             <label>
-                <key>key2</key>
-                <value>develop2</value>
-            </label>
-            <label>
-                <key>key3</key>
-                <value>develop3</value>
+                <key>app</key>
+                <value>LokiAppender</value>
             </label>
         </labels>
         <enabled>true</enabled>

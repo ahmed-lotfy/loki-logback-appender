@@ -6,18 +6,19 @@ import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lotfy.logback.loki.conf.Settings;
 import com.lotfy.logback.loki.model.Label;
 import com.lotfy.logback.loki.model.LokiLabels;
 import com.lotfy.logback.loki.model.LokiStream;
 import com.lotfy.logback.loki.model.LokiStreamWrapper;
-import com.lotfy.logback.loki.util.RestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
@@ -26,7 +27,10 @@ public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
     private String lokiUrl;
     private LokiLabels labels;
     private boolean enabled;
+    private URL lokiURL;
 
+    private static final int TIMEOUT = 3 * 1000; // 3s
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     protected void append(ILoggingEvent iLoggingEvent) {
@@ -37,19 +41,27 @@ public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
             } else {
                 streamWrapper = buildLogPush(iLoggingEvent.getLevel().toString(), iLoggingEvent.getLoggerName(), iLoggingEvent.getThreadName(), iLoggingEvent.getFormattedMessage(), null);
             }
-
-            StringBuilder url = new StringBuilder();
-            url.append(lokiUrl).append(Settings.getLokiUrl());
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
-            headers.add(HttpHeaders.ACCEPT_CHARSET, "utf-8");
             try {
-                RestUtils.post(url.toString(), headers, new ObjectMapper().writeValueAsString(streamWrapper));
+                lokiURL = new URL(lokiUrl + "/loki/api/v1/push");
+                HttpURLConnection conn = (HttpURLConnection) lokiURL.openConnection();
+                conn.addRequestProperty("Content-Type", "application/json");
+                conn.addRequestProperty("Accept-Charset", "utf-8");
+                conn.setRequestMethod("POST");
+                conn.setDoOutput(true);
+                conn.setReadTimeout(TIMEOUT);
+                conn.setConnectTimeout(TIMEOUT);
+                objectMapper.writeValue(conn.getOutputStream(), streamWrapper);
+                conn.connect();
+                logger.trace("loki appender send {} {}", streamWrapper, conn.getResponseCode());
             } catch (JsonProcessingException e) {
+                logger.error(e.getMessage());
+            } catch (IOException e) {
                 logger.error(e.getMessage());
             }
         }
     }
+
+    private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
     private LokiStreamWrapper buildLogPush(String level, String loggerName, String threadName, String message, IThrowableProxy throwableProxy) {
         LokiStreamWrapper streamWrapper = new LokiStreamWrapper();
@@ -57,39 +69,31 @@ public class LokiAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
         for (Label label : labels.getLabels()) {
             stream.getStream().put(label.getKey(), label.getValue());
         }
-        String[] v1;
-        if (!level.equalsIgnoreCase("error")) {
-            v1 = new String[]{String.valueOf(System.currentTimeMillis() * 1000000),
-                    formatFirstLine(level.toUpperCase(), loggerName, threadName, message)};
-        } else {
-            v1 = new String[]{String.valueOf(System.currentTimeMillis() * 1000000),
-                    formatFirstLine(level.toUpperCase(), loggerName, threadName, message) + formatStackTrace(throwableProxy)};
-        }
-        stream.getValues().add(v1);
+        stream.getStream().put("level", level);
+        stream.getStream().put("logger", loggerName);
+        stream.getStream().put("thread", threadName);
+        Instant now = Instant.now();
+        stream.getValues().add(new String[]{String.valueOf(now.toEpochMilli() * 1000000), formatValue(now.atZone(ZoneId.systemDefault()).format(FORMAT), level, loggerName, threadName, message, throwableProxy)});
         streamWrapper.addStream(stream);
         return streamWrapper;
 
     }
 
-    private String formatFirstLine(String level, String loggerName, String threadName, String message) {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        String time = format.format(new Date(System.currentTimeMillis()));
-
-        return time +
-                " " +
-                level.toUpperCase() +
-                " " +
-                loggerName +
-                " " +
-                "[" + threadName + "]" +
-                " " +
-                message;
-    }
-
-    private String formatStackTrace(IThrowableProxy iThrowableProxy) {
+    private String formatValue(String nanos, String level, String loggerName, String threadName, String message, IThrowableProxy iThrowableProxy) {
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < iThrowableProxy.getStackTraceElementProxyArray().length; i++) {
-            builder.append("\n\t\t").append(iThrowableProxy.getStackTraceElementProxyArray()[i].toString());
+        builder.append(nanos);
+        builder.append(" [");
+        builder.append(threadName);
+        builder.append("] ");
+        builder.append(level.toUpperCase());
+        builder.append(" ");
+        builder.append(loggerName);
+        builder.append(" - ");
+        builder.append(message);
+        if (iThrowableProxy != null) {
+            for (int i = 0; i < iThrowableProxy.getStackTraceElementProxyArray().length; i++) {
+                builder.append("\n\t\t").append(iThrowableProxy.getStackTraceElementProxyArray()[i].toString());
+            }
         }
         return builder.toString();
     }

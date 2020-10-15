@@ -3,6 +3,12 @@ Logback Loki Appender
 
 Send log events directly from Logback to Loki. Logs are delivered asynchronously (i.e. not on the main thread) so will not block execution of the program. Note that the queue backlog can be bounded and messages *can* be lost if Loki is down and either the backlog queue is full or the producer program is trying to exit. For long-lived programs, this should not be a problem, as messages should be delivered eventually.
 
+Addition
+================
+
+- add default label `logger` `thread` `level` for search and filter
+- simplified the dependencies, remove Spring and HttpClient
+
 Usage
 =====
 Include slf4j and logback as usual (depending on this library will *not* automatically pull them in).
